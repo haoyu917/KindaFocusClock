@@ -1,0 +1,24 @@
+# .NET build output
+bin/
+obj/
+artifacts/
+TestResults/
+packages/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider / ReSharper
+.idea/
+*.iml
+_ReSharper.Caches/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.cache
+*.bak

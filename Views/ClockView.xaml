@@ -1,0 +1,19 @@
+<UserControl x:Class="MyClock.Views.ClockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock HorizontalAlignment="Center"
+                       FontSize="22"
+                       Foreground="{StaticResource SecondaryTextBrush}"
+                       Text="CURRENT TIME" />
+            <TextBlock Margin="0,14,0,0"
+                       HorizontalAlignment="Center"
+                       FontSize="72"
+                       FontWeight="Light"
+                       Foreground="{StaticResource AccentBrush}"
+                       Text="{Binding CurrentTime}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

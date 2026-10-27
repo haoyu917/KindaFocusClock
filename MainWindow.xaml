@@ -1,0 +1,66 @@
+<Window x:Class="MyClock.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:MyClock.ViewModels"
+        xmlns:views="clr-namespace:MyClock.Views"
+        Title="My Clock"
+        Width="876"
+        Height="530"
+        MinWidth="760"
+        MinHeight="480"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <Window.Resources>
+    
+        <DataTemplate DataType="{x:Type vm:ClockViewModel}">
+            <views:ClockView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StopwatchViewModel}">
+            <views:StopwatchView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+    </Window.Resources>
+
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        
+        <Border Grid.Column="0"
+                Padding="12,18,12,14"
+                Background="{StaticResource PanelBackgroundBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="0,0,1,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top"
+                           Margin="4,2,4,32"
+                           FontSize="25"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Text="My Clock" />
+                <StackPanel DockPanel.Dock="Top">
+                    <Button Command="{Binding ShowClockCommand}" Content="Clock" Style="{StaticResource NavigationButtonStyle}" />
+                    <Button Command="{Binding ShowStopwatchCommand}" Content="Window Monitor" Style="{StaticResource NavigationButtonStyle}" />
+                    <Button Command="{Binding ShowSettingsCommand}" Content="Settings" Style="{StaticResource NavigationButtonStyle}" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Bottom"
+                           Margin="8,12,8,0"
+                           FontFamily="Cascadia Mono, Consolas"
+                           FontSize="9"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="MISSION CONTROL · v0.1" />
+            </DockPanel>
+        </Border>
+
+        
+        <Border Grid.Column="1"
+                Padding="18"
+                Background="{StaticResource WindowBackgroundBrush}">
+            <ContentControl Content="{Binding CurrentViewModel}" />
+        </Border>
+    </Grid>
+</Window>

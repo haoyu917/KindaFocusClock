@@ -1,0 +1,151 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:models="clr-namespace:MyClock.Models">
+    
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#11151B" />
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#1B2028" />
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F4F7FA" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#9AA8B8" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#58D6C7" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#55D68B" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#F2B84B" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="#EF6464" />
+    <SolidColorBrush x:Key="DisabledBrush" Color="#66717F" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#1C222B" />
+    <SolidColorBrush x:Key="SecondaryCardBackgroundBrush" Color="#202733" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#2A3442" />
+
+    
+    <Style x:Key="MissionCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="14" />
+    </Style>
+
+    <Style x:Key="MetricCardStyle" TargetType="Border" BasedOn="{StaticResource MissionCardStyle}">
+        <Setter Property="Background" Value="{StaticResource SecondaryCardBackgroundBrush}" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style x:Key="TelemetryCardStyle" TargetType="Border" BasedOn="{StaticResource MissionCardStyle}">
+        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style x:Key="ConnectedBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="#18352D" />
+        <Setter Property="BorderBrush" Value="#286A53" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+    </Style>
+
+    
+    <Style x:Key="StatusBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="#26303C" />
+        <Setter Property="BorderBrush" Value="#3A4655" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding CurrentMonitorState}" Value="{x:Static models:MonitorState.Active}">
+                <Setter Property="Background" Value="#18352D" />
+                <Setter Property="BorderBrush" Value="#286A53" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding CurrentMonitorState}" Value="{x:Static models:MonitorState.Background}">
+                <Setter Property="Background" Value="#3B3020" />
+                <Setter Property="BorderBrush" Value="#80602B" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding CurrentMonitorState}" Value="{x:Static models:MonitorState.WindowLost}">
+                <Setter Property="Background" Value="#3D252A" />
+                <Setter Property="BorderBrush" Value="#7E3D48" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="StatusDotStyle" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{StaticResource DisabledBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding CurrentMonitorState}" Value="{x:Static models:MonitorState.Active}">
+                <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding CurrentMonitorState}" Value="{x:Static models:MonitorState.Background}">
+                <Setter Property="Fill" Value="{StaticResource WarningBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding CurrentMonitorState}" Value="{x:Static models:MonitorState.WindowLost}">
+                <Setter Property="Fill" Value="{StaticResource ErrorBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="MissionComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Background" Value="#F4F7FA" />
+        
+        <Setter Property="Foreground" Value="#11151B" />
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="10,7" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
+        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="#10201F" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="SecondaryActionButtonStyle" TargetType="Button">
+        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="Background" Value="#29313D" />
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="TextActionButtonStyle" TargetType="Button">
+        <Setter Property="Padding" Value="10,9" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.4" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    
+    <Style x:Key="NavigationButtonStyle" TargetType="Button">
+        <Setter Property="Margin" Value="0,4" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+        
+        <Setter Property="FontSize" Value="15" />
+    </Style>
+
+    
+    <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}" />
+</ResourceDictionary>

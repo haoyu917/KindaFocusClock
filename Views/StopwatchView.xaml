@@ -1,0 +1,169 @@
+<UserControl x:Class="MyClock.Views.StopwatchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Text="Window Activity Monitor" />
+                <TextBlock Margin="0,2,0,0"
+                           FontSize="11"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="Track how long a selected window stays foreground" />
+            </StackPanel>
+            <Border HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Padding="9,5"
+                    Style="{StaticResource ConnectedBadgeStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Margin="0,0,6,0" Fill="{StaticResource SuccessBrush}" />
+                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="CONNECTED" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        
+        <Border Grid.Row="1" Padding="12,10" Style="{StaticResource MissionCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock FontFamily="Cascadia Mono, Consolas"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SecondaryTextBrush}"
+                               Text="CURRENT TARGET" />
+                    <TextBlock Margin="0,4,0,0"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryTextBrush}"
+                               Text="{Binding SelectedWindowTitle}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding SelectedWindowTitle}" />
+                </StackPanel>
+                <Border Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Padding="9,5"
+                        Style="{StaticResource StatusBadgeStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="6" Height="6" Margin="0,0,6,0" Style="{StaticResource StatusDotStyle}" />
+                        <TextBlock FontSize="10"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding MonitorStateText}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        
+        <Border Grid.Row="2" Margin="0,10,0,10" Padding="14,12" Style="{StaticResource MissionCardStyle}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock HorizontalAlignment="Center"
+                           FontFamily="Cascadia Mono, Consolas"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="CURRENT SESSION" />
+                <TextBlock Margin="0,5,0,3"
+                           HorizontalAlignment="Center"
+                           FontFamily="Cascadia Mono, Consolas"
+                           FontSize="48"
+                           Foreground="{StaticResource AccentBrush}"
+                           Text="{Binding ElapsedTime}" />
+                <TextBlock HorizontalAlignment="Center"
+                           FontSize="12"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="{Binding MonitorDescription}" />
+
+                <StackPanel Width="420" Margin="0,12,0,0">
+                    <TextBlock Margin="0,0,0,5"
+                               FontSize="11"
+                               Foreground="{StaticResource SecondaryTextBrush}"
+                               Text="TARGET WINDOW" />
+                    <ComboBox Height="34"
+                              ItemsSource="{Binding OpenWindows}"
+                              SelectedItem="{Binding SelectedWindow, Mode=TwoWay}"
+                              Style="{StaticResource MissionComboBoxStyle}"
+                              ToolTip="Select an open window to monitor">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="#11151B"
+                                           Text="{Binding Title}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Title}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <UniformGrid Margin="0,8,0,0" Columns="3">
+                        <Button Command="{Binding StartCommand}" Content="Start / Continue" Style="{StaticResource SecondaryActionButtonStyle}" />
+                        <Button Command="{Binding PauseCommand}" Content="Pause" Style="{StaticResource SecondaryActionButtonStyle}" />
+                        <Button Command="{Binding ResetCommand}" Content="Reset" Style="{StaticResource SecondaryActionButtonStyle}" />
+                    </UniformGrid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        
+        <UniformGrid Grid.Row="3" Columns="3">
+            <Border Margin="0,0,4,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                <StackPanel>
+                    <TextBlock FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SecondaryTextBrush}"
+                               Text="TODAY ACTIVE" />
+                    <TextBlock Margin="0,4,0,0"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="16"
+                               Foreground="{StaticResource SuccessBrush}"
+                               Text="{Binding TodayActiveTime}" />
+                    <TextBlock FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" Text="Target foreground time" />
+                </StackPanel>
+            </Border>
+            <Border Margin="4,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                <StackPanel>
+                    <TextBlock FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SecondaryTextBrush}"
+                               Text="FOREGROUND RATE" />
+                    <TextBlock Margin="0,4,0,0"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="16"
+                               Foreground="{StaticResource SuccessBrush}"
+                               Text="{Binding ForegroundTimePercentage}" />
+                    <TextBlock FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" Text="Current session" />
+                </StackPanel>
+            </Border>
+            <Border Margin="4,0,0,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                <StackPanel>
+                    <TextBlock FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SecondaryTextBrush}"
+                               Text="LAST TRANSITION" />
+                    <TextBlock Margin="0,4,0,0"
+                               FontSize="14"
+                               Foreground="{StaticResource PrimaryTextBrush}"
+                               Text="{Binding LastTransitionWindow}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding LastTransitionWindow}" />
+                    <TextBlock FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" Text="Previous target window" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+    </Grid>
+</UserControl>
