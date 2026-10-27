@@ -199,22 +199,14 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         get => _selectedWindow;
         set
         {
-            
-            
-            
-            
             var previousHandle = _selectedWindow?.Handle;
             if (previousHandle is not null && value is not null && previousHandle != value.Handle)
             {
-                
-                
                 _lastNonTargetWindowTitle = _selectedWindow?.Title ?? _lastSelectedWindowTitle;
             }
 
             if (previousHandle is not null && (value is null || previousHandle != value.Handle))
             {
-                
-                
                 StopTodayActiveMeasurement(previousHandle.Value);
             }
 
@@ -231,18 +223,17 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
             if (value is not null)
             {
                 _lastSelectedWindowTitle = value.Title;
-                if (previousHandle != value.Handle)
+                // Start a new percentage session only when the user changes targets
+                // refreshing the window list must preserve the current session
+                if (previousHandle != value.Handle && !_isRefreshingWindows)
                 {
-                    
-                    
+                    // Allow the result to show normally
                     _isPercentageCleared = false;
                     _monitoringSessionStopwatch.Reset();
                     _foregroundSessionStopwatch.Reset();
                     _activeDate = DateTime.Today;
                 }
             }
-
-            
             
             EvaluateTrackingState();
             NotifyDisplayStateChanged();
@@ -345,10 +336,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void OnWindowsChanged(object? sender, EventArgs e)
     {
-        
-        
-        
-        
         var selectedHandle = SelectedWindow?.Handle;
         if (selectedHandle is not null)
         {
@@ -362,8 +349,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
             {
                 OpenWindows.Add(window);
             }
-
-            
             
             var refreshedSelection = selectedHandle is not null
                 ? OpenWindows.FirstOrDefault(window => window.Handle == selectedHandle)
@@ -393,22 +378,13 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void OnForegroundWindowChanged(object? sender, EventArgs e)
     {
-        
-        
-        
-        
+
         EvaluateTrackingState();
         NotifyDisplayStateChanged();
     }
 
     private void EvaluateTrackingState()
     {
-        
-        
-        
-        
-        
-        
         if (!_isPageActive || !IsTrackingEnabled || SelectedWindow is null || _isWindowLost)
         {
             StopSessionMeasurement();
@@ -416,8 +392,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
             NotifyStateChanged();
             return;
         }
-
-        
         
         var isForeground = _windowTrackingService.IsForeground(SelectedWindow.Handle);
         if (isForeground)
@@ -435,10 +409,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void OnRefreshTimerTick(object? sender, EventArgs e)
     {
-        
-        
-        
-        
         if (_isPageActive)
         {
             EnsureCurrentDay();
@@ -450,8 +420,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void NotifyStateChanged()
     {
-        
-        
         OnPropertyChanged(nameof(ElapsedTime));
         OnPropertyChanged(nameof(IsRunning));
         _startCommand.RaiseCanExecuteChanged();
@@ -462,8 +430,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void NotifyDisplayStateChanged()
     {
-        
-        
         OnPropertyChanged(nameof(SelectedWindowTitle));
         OnPropertyChanged(nameof(CurrentMonitorState));
         OnPropertyChanged(nameof(MonitorStateText));
@@ -479,18 +445,12 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void UpdateSessionMeasurement(bool isForeground)
     {
-        
-        
         EnsureCurrentDay();
         // The session denominator includes time spent in other real windows.
         // Only the target's foreground time pauses when focus moves away.
         _monitoringSessionStopwatch.Start();
         if (isForeground)
         {
-            
-            
-            
-            
             _foregroundSessionStopwatch.Start();
             if (SelectedWindow is not null)
             {
@@ -509,8 +469,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void StopSessionMeasurement()
     {
-        
-        
         _monitoringSessionStopwatch.Stop();
         _foregroundSessionStopwatch.Stop();
         if (SelectedWindow is not null)
@@ -525,8 +483,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         {
             return;
         }
-
-        
         
         foreach (var stopwatch in _todayActiveStopwatches.Values)
         {
@@ -542,8 +498,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private System.Diagnostics.Stopwatch GetTodayActiveStopwatch(nint windowHandle)
     {
-        
-        
         if (!_todayActiveStopwatches.TryGetValue(windowHandle, out var stopwatch))
         {
             stopwatch = new System.Diagnostics.Stopwatch();
@@ -555,8 +509,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void StopTodayActiveMeasurement(nint windowHandle)
     {
-        
-        
         if (_todayActiveStopwatches.TryGetValue(windowHandle, out var stopwatch))
         {
             stopwatch.Stop();
@@ -565,8 +517,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        
-        
         if (_disposed)
         {
             return;

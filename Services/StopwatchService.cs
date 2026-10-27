@@ -1,11 +1,6 @@
 namespace MyClock.Services;
 
 
-
-
-
-
-
 public sealed class StopwatchService : IStopwatchService
 {
     
