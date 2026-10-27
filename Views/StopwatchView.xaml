@@ -1,7 +1,6 @@
 <UserControl x:Class="MyClock.Views.StopwatchView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -9,8 +8,6 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        
         <Grid Grid.Row="0" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock FontSize="16"
@@ -32,8 +29,6 @@
                 </StackPanel>
             </Border>
         </Grid>
-
-        
         <Border Grid.Row="1" Padding="12,10" Style="{StaticResource MissionCardStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -67,8 +62,6 @@
                 </Border>
             </Grid>
         </Border>
-
-        
         <Border Grid.Row="2" Margin="0,10,0,10" Padding="14,12" Style="{StaticResource MissionCardStyle}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock HorizontalAlignment="Center"
@@ -87,7 +80,6 @@
                            FontSize="12"
                            Foreground="{StaticResource SecondaryTextBrush}"
                            Text="{Binding MonitorDescription}" />
-
                 <StackPanel Width="420" Margin="0,12,0,0">
                     <TextBlock Margin="0,0,0,5"
                                FontSize="11"
@@ -115,8 +107,6 @@
                 </StackPanel>
             </StackPanel>
         </Border>
-
-        
         <UniformGrid Grid.Row="3" Columns="3">
             <Border Margin="0,0,4,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
                 <StackPanel>

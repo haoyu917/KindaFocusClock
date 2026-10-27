@@ -7,12 +7,6 @@ using MyClock.Services;
 
 namespace MyClock.ViewModels;
 
-
-
-
-
-
-
 public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 {
     private readonly IStopwatchService _stopwatchService;
@@ -21,14 +15,11 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
     private readonly RelayCommand _startCommand;
     private readonly RelayCommand _pauseCommand;
     private readonly RelayCommand _resetCommand;
-    
-    
+
     private readonly System.Diagnostics.Stopwatch _monitoringSessionStopwatch = new();
-    
-    
+
     private readonly System.Diagnostics.Stopwatch _foregroundSessionStopwatch = new();
-    
-    
+
     private readonly Dictionary<nint, System.Diagnostics.Stopwatch> _todayActiveStopwatches = new();
     private bool _isPageActive;
     private bool _wasRunningBeforeUnload;
@@ -39,41 +30,33 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
     private bool _isRefreshingWindows;
     private bool _isPercentageCleared;
     private DateTime _activeDate = DateTime.Today;
-    
-    
+
     private string? _lastNonTargetWindowTitle;
     private bool _disposed;
 
     public StopwatchViewModel(IStopwatchService stopwatchService, IWindowTrackingService windowTrackingService)
     {
-        
-        
+
         _stopwatchService = stopwatchService;
         _windowTrackingService = windowTrackingService;
         OpenWindows = new ObservableCollection<OpenWindowInfo>(_windowTrackingService.OpenWindows);
         _windowTrackingService.WindowsChanged += OnWindowsChanged;
         _windowTrackingService.ForegroundWindowChanged += OnForegroundWindowChanged;
-        
-        
+
         _startCommand = new RelayCommand(Start, () => CanStart);
         _pauseCommand = new RelayCommand(Pause, () => CanPause);
         _resetCommand = new RelayCommand(Reset, () => CanReset);
-        
-        
+
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _refreshTimer.Tick += OnRefreshTimerTick;
     }
 
-    
     public string ElapsedTime => _stopwatchService.Elapsed.ToString(@"mm\:ss\.f");
 
-    
     public bool IsRunning => _stopwatchService.IsRunning;
 
-    
     public string SelectedWindowTitle => SelectedWindow?.Title ?? (_isWindowLost ? _lastSelectedWindowTitle ?? "Unknown window" : "No window selected");
 
-    
     public MonitorState CurrentMonitorState
     {
         get
@@ -99,7 +82,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         }
     }
 
-    
     public string MonitorStateText => CurrentMonitorState switch
     {
         MonitorState.Active => "ACTIVE",
@@ -110,7 +92,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         _ => "NOT SELECTED"
     };
 
-    
     public string MonitorDescription => CurrentMonitorState switch
     {
         MonitorState.Active => "Target is in foreground · Timer running",
@@ -121,23 +102,12 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         _ => "Select a target window to begin"
     };
 
-    
     public bool CanStart => SelectedWindow is not null && !IsTrackingEnabled;
 
-    
     public bool CanPause => IsTrackingEnabled;
 
-    
     public bool CanReset => IsRunning || _stopwatchService.Elapsed > TimeSpan.Zero;
 
-    
-    
-    
-    
-    
-    
-    
-    
     public string ForegroundTimePercentage
     {
         get
@@ -152,15 +122,12 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
                 return "--";
             }
 
-            
-            
             var percentage = _foregroundSessionStopwatch.Elapsed.TotalMilliseconds /
                              _monitoringSessionStopwatch.Elapsed.TotalMilliseconds * 100;
             return $"{Math.Clamp(percentage, 0, 100):0.0}%";
         }
     }
 
-    
     public string TodayActiveTime
     {
         get
@@ -171,27 +138,20 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
                 return "00:00:00";
             }
 
-            
-            
             var elapsed = GetTodayActiveStopwatch(SelectedWindow.Handle).Elapsed;
             var totalHours = (int)elapsed.TotalHours;
             return $"{totalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
         }
     }
 
-    
     public string LastTransitionWindow => _lastNonTargetWindowTitle ?? "--";
 
-    
     public ICommand StartCommand => _startCommand;
 
-    
     public ICommand PauseCommand => _pauseCommand;
 
-    
     public ICommand ResetCommand => _resetCommand;
 
-    
     public ObservableCollection<OpenWindowInfo> OpenWindows { get; }
 
     public OpenWindowInfo? SelectedWindow
@@ -234,7 +194,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
                     _activeDate = DateTime.Today;
                 }
             }
-            
+
             EvaluateTrackingState();
             NotifyDisplayStateChanged();
         }
@@ -246,46 +206,26 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         private set => SetProperty(ref _isTrackingEnabled, value);
     }
 
-    
     public string TrackingStatus => MonitorDescription;
 
-    
-    
-    
-    
-    
-    
     public void OnPageLoaded()
     {
-        
-        
-        
-        
+
         _isPageActive = true;
         _refreshTimer.Start();
 
         if (_wasRunningBeforeUnload)
         {
-            
-            
+
             IsTrackingEnabled = true;
             _wasRunningBeforeUnload = false;
             EvaluateTrackingState();
         }
     }
 
-    
-    
-    
-    
-    
-    
     public void OnPageUnloaded()
     {
-        
-        
-        
-        
+
         _isPageActive = false;
         _wasRunningBeforeUnload = IsTrackingEnabled;
         IsTrackingEnabled = false;
@@ -298,18 +238,14 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void Start()
     {
-        
-        
-        
-        
+
         IsTrackingEnabled = true;
         EvaluateTrackingState();
     }
 
     private void Pause()
     {
-        
-        
+
         IsTrackingEnabled = false;
         StopSessionMeasurement();
         _stopwatchService.Pause();
@@ -318,8 +254,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
     private void Reset()
     {
-        
-        
+
         IsTrackingEnabled = false;
         StopSessionMeasurement();
         _monitoringSessionStopwatch.Reset();
@@ -328,8 +263,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         _isPercentageCleared = true;
         _lastNonTargetWindowTitle = null;
         _stopwatchService.Reset();
-        
-        
+
         SelectedWindow = null;
         NotifyStateChanged();
     }
@@ -349,7 +283,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
             {
                 OpenWindows.Add(window);
             }
-            
+
             var refreshedSelection = selectedHandle is not null
                 ? OpenWindows.FirstOrDefault(window => window.Handle == selectedHandle)
                 : null;
@@ -392,7 +326,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
             NotifyStateChanged();
             return;
         }
-        
+
         var isForeground = _windowTrackingService.IsForeground(SelectedWindow.Handle);
         if (isForeground)
         {
@@ -483,7 +417,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         {
             return;
         }
-        
+
         foreach (var stopwatch in _todayActiveStopwatches.Values)
         {
             stopwatch.Reset();

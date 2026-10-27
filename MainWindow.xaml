@@ -10,7 +10,6 @@
         MinHeight="480"
         Background="{StaticResource WindowBackgroundBrush}">
     <Window.Resources>
-    
         <DataTemplate DataType="{x:Type vm:ClockViewModel}">
             <views:ClockView />
         </DataTemplate>
@@ -21,15 +20,11 @@
             <views:SettingsView />
         </DataTemplate>
     </Window.Resources>
-
-    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-
-        
         <Border Grid.Column="0"
                 Padding="12,18,12,14"
                 Background="{StaticResource PanelBackgroundBrush}"
@@ -55,8 +50,6 @@
                            Text="MISSION CONTROL · v0.1" />
             </DockPanel>
         </Border>
-
-        
         <Border Grid.Column="1"
                 Padding="18"
                 Background="{StaticResource WindowBackgroundBrush}">

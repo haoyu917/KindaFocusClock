@@ -5,7 +5,6 @@ using MyClock.Models;
 
 namespace MyClock.Services;
 
-
 public sealed class WindowTrackingService : IWindowTrackingService
 {
     private const int RefreshMilliseconds = 250;
@@ -22,19 +21,14 @@ public sealed class WindowTrackingService : IWindowTrackingService
         _timer.Start();
     }
 
-    
     public IReadOnlyList<OpenWindowInfo> OpenWindows => _openWindows;
 
-    
     public nint ForegroundWindowHandle => _foregroundWindowHandle;
 
-    
     public event EventHandler? WindowsChanged;
 
-    
     public event EventHandler? ForegroundWindowChanged;
 
-    
     public bool IsForeground(nint windowHandle) =>
         windowHandle != nint.Zero && windowHandle == _foregroundWindowHandle;
 
@@ -49,8 +43,7 @@ public sealed class WindowTrackingService : IWindowTrackingService
         if (!HaveSameWindows(_openWindows, windows))
         {
             _openWindows = windows;
-            
-            
+
             WindowsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -58,8 +51,7 @@ public sealed class WindowTrackingService : IWindowTrackingService
         if (_foregroundWindowHandle != foregroundWindowHandle)
         {
             _foregroundWindowHandle = foregroundWindowHandle;
-            
-            
+
             ForegroundWindowChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -95,7 +87,7 @@ public sealed class WindowTrackingService : IWindowTrackingService
         return windows;
     }
 
-    // Try to fix the bug that the window tracking percentage will fail when changing the 
+    // Try to fix the bug that the window tracking percentage will fail when changing the
     // window by alt+tab
     // HWND: the number that Windows gave to each window, used to differ each window
     // This fix the checking strategy that now the method only check the number of the windows, HWND and the title
@@ -107,7 +99,7 @@ public sealed class WindowTrackingService : IWindowTrackingService
         {
             return false;
         }
-        
+
         // Key: HWND
         // Value: title of the window
         var firstByHandle = new Dictionary<nint, string>(first.Count);
@@ -140,25 +132,21 @@ public sealed class WindowTrackingService : IWindowTrackingService
 
     private delegate bool EnumWindowsCallback(nint windowHandle, nint lParam);
 
-    
     [DllImport("user32.dll")]
     private static extern bool EnumWindows(EnumWindowsCallback callback, nint lParam);
 
-    
     [DllImport("user32.dll")]
     private static extern bool IsWindowVisible(nint windowHandle);
 
-    
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetWindowText(nint windowHandle, StringBuilder text, int maxCount);
 
-    
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetWindowTextLength(nint windowHandle);
-    
+
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(nint windowHandle, out uint processId);
-    
+
     [DllImport("user32.dll")]
     private static extern nint GetForegroundWindow();
 }

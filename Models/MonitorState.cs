@@ -1,11 +1,5 @@
 namespace MyClock.Models;
 
-
-
-
-
-
-
 public enum MonitorState
 {
     NotSelected,
