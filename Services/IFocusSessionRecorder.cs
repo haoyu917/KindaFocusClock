@@ -25,4 +25,7 @@ public interface IFocusSessionRecorder : IDisposable
 
     // Saves and closes the current session, if any.
     void End();
+
+    // Saves the current session's progress now instead of at the next autosave.
+    void Flush();
 }

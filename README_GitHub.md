@@ -11,6 +11,7 @@ MyClock is a lightweight Windows productivity timer built with WPF and .NET 10. 
 - **Foreground Rate** — shows the percentage of the current monitoring session spent actively using the selected window.
 - **Switches** — counts how many times focus left the selected window during the current session.
 - **Session History** — saves every monitoring session, with its switch count and foreground rate, to a local SQLite database.
+- **Focus Summary** — rates each session from LOCKED IN to ESCAPE ARTIST, with a tip and the applications that pulled you away most.
 - **Settings** — provides the foundation for configurable themes, alarms, and future preferences.
 
 ## Screenshots
@@ -39,7 +40,7 @@ You can also open `WpfApp1.sln` in Visual Studio or another .NET-compatible Wind
 ## How to Use
 
 1. Start the application.
-2. Use the navigation panel on the left to choose **Clock**, **Window Monitor**, or **Settings**.
+2. Use the navigation panel on the left to choose **Clock**, **Window Monitor**, **Summary**, or **Settings**.
 3. In **Window Monitor**, select an open window from **TARGET WINDOW**.
 4. Select **Start / Continue** to begin monitoring.
 5. Work in the selected window. The timer runs while that window is the Windows foreground window and waits while another window is active.
@@ -97,6 +98,30 @@ Counts how many times focus left the target for another application window durin
 ### Last Transition
 
 Shows the previous target window when the selected target changes. It displays `--` until a previous target exists.
+
+## Focus Summary
+
+The **Summary** page reviews one monitoring session at a time. Choose a session from the list in the top-right corner; the newest session from the last 30 days is shown first, and the session in progress includes its latest data.
+
+The verdict is based on the session's foreground rate:
+
+| Verdict | Foreground rate |
+| --- | --- |
+| `LOCKED IN` | 85% or more |
+| `IN THE ZONE` | 65% to 85% |
+| `HALF HERE` | 40% to 65% |
+| `ESCAPE ARTIST` | Below 40% |
+| `WARMING UP` | Sessions shorter than one minute, which are too short to rate |
+
+Each verdict comes with a light-hearted comment and a tip based on the session's data, such as the application that pulled you away most often or an unusually long average detour.
+
+The page also shows:
+
+- **FOCUS TIME** — time the target was in the foreground, out of the monitored time.
+- **SWITCHES** — number of switches and switches per hour.
+- **AVG DETOUR** — average and longest time away from the target per switch.
+- **TOP DISTRACTION** — the application you switched to most often, with its visit count and time.
+- **WHERE YOUR FOCUS WENT** — the top three applications visited while away, with each one's share of the time away.
 
 ## Focus session history
 

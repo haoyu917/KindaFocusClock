@@ -161,6 +161,8 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
         _foregroundStopwatch.Reset();
     }
 
+    public void Flush() => Save();
+
     private void OpenSwitch()
     {
         _currentSwitch = new FocusSwitch { LeftAt = DateTimeOffset.Now };

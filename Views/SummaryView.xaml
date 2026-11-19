@@ -1,0 +1,252 @@
+<UserControl x:Class="MyClock.Views.SummaryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Text="Focus Summary" />
+                <TextBlock Margin="0,2,0,0"
+                           FontSize="11"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="{Binding HeaderSubtitle}"
+                           TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding HeaderSubtitle}" />
+            </StackPanel>
+            <ComboBox Grid.Column="1"
+                      Width="250"
+                      Height="30"
+                      VerticalAlignment="Top"
+                      ItemsSource="{Binding Sessions}"
+                      SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
+                      Style="{StaticResource MissionComboBoxStyle}"
+                      ToolTip="Choose a session to review"
+                      Visibility="{Binding HasSessions, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock FontSize="12"
+                                   Foreground="#11151B"
+                                   Text="{Binding Label}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Padding="24"
+                Style="{StaticResource MissionCardStyle}"
+                Visibility="{Binding HasNoSessions, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBlock HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontSize="13"
+                       Foreground="{StaticResource SecondaryTextBrush}"
+                       Text="{Binding EmptyMessage}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding HasSessions, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel>
+                <!-- Verdict: rating badge, comment, tip, and the foreground rate -->
+                <Border Padding="16,14" Style="{StaticResource MissionCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <Border HorizontalAlignment="Left"
+                                    Padding="9,5"
+                                    Style="{StaticResource VerdictBadgeStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="6" Height="6" Margin="0,0,6,0" Style="{StaticResource VerdictDotStyle}" />
+                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding Headline}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Margin="0,10,0,0"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                       Text="{Binding Message}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Margin="0,6,0,0"
+                                       FontSize="12"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="{Binding Tip}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock HorizontalAlignment="Right"
+                                       FontFamily="Cascadia Mono, Consolas"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="FOREGROUND RATE" />
+                            <TextBlock HorizontalAlignment="Right"
+                                       FontFamily="Cascadia Mono, Consolas"
+                                       FontSize="40"
+                                       Style="{StaticResource VerdictValueTextStyle}"
+                                       Text="{Binding RateText}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1.1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Session numbers -->
+                    <UniformGrid Grid.Column="0" Margin="0,0,5,0" Columns="2" Rows="2">
+                        <Border Margin="0,0,4,4" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                            <StackPanel>
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="FOCUS TIME" />
+                                <TextBlock Margin="0,4,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="16"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           Text="{Binding FocusTimeText}" />
+                                <TextBlock FontSize="9"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="{Binding FocusTimeDetail}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border Margin="4,0,0,4" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                            <StackPanel>
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="SWITCHES" />
+                                <TextBlock Margin="0,4,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="16"
+                                           Foreground="{StaticResource WarningBrush}"
+                                           Text="{Binding SwitchCountText}" />
+                                <TextBlock FontSize="9"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="{Binding SwitchRateText}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border Margin="0,4,4,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                            <StackPanel>
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="AVG DETOUR" />
+                                <TextBlock Margin="0,4,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="16"
+                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                           Text="{Binding AverageAwayText}" />
+                                <TextBlock FontSize="9"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="{Binding LongestAwayText}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border Margin="4,4,0,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                            <StackPanel>
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="TOP DISTRACTION" />
+                                <TextBlock Margin="0,4,0,0"
+                                           FontSize="14"
+                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                           Text="{Binding TopDistractionName}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding TopDistractionName}" />
+                                <TextBlock FontSize="9"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="{Binding TopDistractionDetail}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Where time away from the target went -->
+                    <Border Grid.Column="1" Margin="5,0,0,0" Padding="14,12" Style="{StaticResource MissionCardStyle}">
+                        <StackPanel>
+                            <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="WHERE YOUR FOCUS WENT" />
+                            <ItemsControl Margin="0,10,0,0"
+                                          ItemsSource="{Binding Distractions}"
+                                          Visibility="{Binding HasDistractions, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                                <TextBlock FontSize="13"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                           Text="{Binding Name}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock FontSize="10"
+                                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                                           Text="{Binding WindowTitle}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding WindowTitle}" />
+                                                <ProgressBar Margin="0,4,0,0"
+                                                             Style="{StaticResource ShareBarStyle}"
+                                                             Value="{Binding Share, Mode=OneWay}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" MinWidth="64" VerticalAlignment="Center">
+                                                <TextBlock HorizontalAlignment="Right"
+                                                           FontFamily="Cascadia Mono, Consolas"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource WarningBrush}"
+                                                           Text="{Binding CountText}" />
+                                                <TextBlock HorizontalAlignment="Right"
+                                                           FontFamily="Cascadia Mono, Consolas"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                                           Text="{Binding TimeText}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Margin="0,10,0,0"
+                                       FontSize="12"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="{Binding NoDistractionsMessage}"
+                                       TextWrapping="Wrap"
+                                       Visibility="{Binding HasNoDistractions, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

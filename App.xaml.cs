@@ -25,6 +25,7 @@ public partial class App : Application
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ClockViewModel>();
         services.AddSingleton<StopwatchViewModel>();
+        services.AddSingleton<SummaryViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainWindow>();
 
