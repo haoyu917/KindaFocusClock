@@ -14,6 +14,10 @@ public interface IFocusSessionRecorder : IDisposable
     // Times focus left the target in the current session; zero when no session is open.
     int SwitchCount { get; }
 
+    // Database id of the session being recorded, or null when none is open or it
+    // has not been saved yet. History cleanup keeps this session.
+    long? CurrentSessionId { get; }
+
     bool IsRecording(nint windowHandle);
 
     // Ends any open session and starts a new one for the window.

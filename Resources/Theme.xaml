@@ -163,6 +163,89 @@
         <Setter Property="Padding" Value="10,7" />
         <Setter Property="FontSize" Value="14" />
     </Style>
+    <Style x:Key="MissionTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="#F4F7FA" />
+        <Setter Property="Foreground" Value="#11151B" />
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="MissionCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <!-- Small uppercase heading at the top of a card, such as "FOCUS RATING". -->
+    <Style x:Key="SectionLabelTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+    </Style>
+    <Style x:Key="HintTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="SettingLabelTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- Thin dark scroll bars. Apply inside a ScrollViewer with
+         <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBarStyle}" />. -->
+    <Style x:Key="ThinScrollThumbStyle" TargetType="Thumb">
+        <Setter Property="Background" Value="#3A4655" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="3" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#4A5869" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <ControlTemplate x:Key="ThinVerticalScrollBarTemplate" TargetType="ScrollBar">
+        <Border Background="Transparent">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                <Track.Thumb>
+                    <Thumb Style="{StaticResource ThinScrollThumbStyle}" />
+                </Track.Thumb>
+            </Track>
+        </Border>
+    </ControlTemplate>
+    <ControlTemplate x:Key="ThinHorizontalScrollBarTemplate" TargetType="ScrollBar">
+        <Border Background="Transparent">
+            <Track x:Name="PART_Track">
+                <Track.Thumb>
+                    <Thumb Style="{StaticResource ThinScrollThumbStyle}" />
+                </Track.Thumb>
+            </Track>
+        </Border>
+    </ControlTemplate>
+    <Style x:Key="ThinScrollBarStyle" TargetType="ScrollBar">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="MinWidth" Value="6" />
+        <Setter Property="Margin" Value="4,0,0,0" />
+        <Setter Property="Template" Value="{StaticResource ThinVerticalScrollBarTemplate}" />
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Width" Value="Auto" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Height" Value="6" />
+                <Setter Property="MinHeight" Value="6" />
+                <Setter Property="Margin" Value="0,4,0,0" />
+                <Setter Property="Template" Value="{StaticResource ThinHorizontalScrollBarTemplate}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
     <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
         <Setter Property="Margin" Value="0,0,8,0" />
         <Setter Property="Padding" Value="14,9" />

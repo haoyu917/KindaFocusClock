@@ -14,6 +14,7 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
 
     private readonly IFocusSessionRepository _repository;
     private readonly IWindowTrackingService _windowTrackingService;
+    private readonly ISettingsService _settingsService;
     private readonly DispatcherTimer _autoSaveTimer;
 
     // All stopwatches run only while monitoring, so paused time is never counted.
@@ -30,13 +31,24 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
     private FocusSwitch? _currentSwitch;
     private FocusSwitchVisit? _currentVisit;
     private nint _currentVisitHandle;
+
+    // Whether the last checked foreground window belongs to an excluded application,
+    // cached so the process is not looked up on every update.
+    private nint _exclusionCheckedHandle;
+    private bool _isExclusionCheckedHandleExcluded;
+
     private bool _hasUnsavedChanges;
     private bool _disposed;
 
-    public FocusSessionRecorder(IFocusSessionRepository repository, IWindowTrackingService windowTrackingService)
+    public FocusSessionRecorder(
+        IFocusSessionRepository repository,
+        IWindowTrackingService windowTrackingService,
+        ISettingsService settingsService)
     {
         _repository = repository;
         _windowTrackingService = windowTrackingService;
+        _settingsService = settingsService;
+        _settingsService.SettingsChanged += OnSettingsChanged;
         _autoSaveTimer = new DispatcherTimer { Interval = AutoSaveInterval };
         _autoSaveTimer.Tick += OnAutoSaveTimerTick;
     }
@@ -46,6 +58,8 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
     public TimeSpan ForegroundDuration => _foregroundStopwatch.Elapsed;
 
     public int SwitchCount => _currentSession?.SwitchCount ?? 0;
+
+    public long? CurrentSessionId => _currentSession is { Id: > 0 } session ? session.Id : null;
 
     public bool IsRecording(nint windowHandle) =>
         _currentSession is not null && _windowHandle == windowHandle;
@@ -103,10 +117,12 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
 
         _foregroundStopwatch.Stop();
 
-        // No foreground window (for example mid Alt+Tab) and MyClock itself are not
-        // switches: using MyClock to pause or change targets is not a distraction.
+        // No foreground window (for example mid Alt+Tab), MyClock itself, and
+        // applications the user excluded in settings are not switches: using MyClock
+        // to pause or change targets, or skipping a song, is not a distraction.
         var isOtherApplication = foregroundHandle != nint.Zero &&
-                                 !_windowTrackingService.IsCurrentProcessWindow(foregroundHandle);
+                                 !_windowTrackingService.IsCurrentProcessWindow(foregroundHandle) &&
+                                 !IsExcludedApplication(foregroundHandle);
 
         if (_currentSwitch is null)
         {
@@ -162,6 +178,31 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
     }
 
     public void Flush() => Save();
+
+    private bool IsExcludedApplication(nint windowHandle)
+    {
+        var excludedNames = _settingsService.Current.ExcludedProcessNames;
+        if (excludedNames.Count == 0)
+        {
+            return false;
+        }
+
+        if (windowHandle != _exclusionCheckedHandle)
+        {
+            var processName = _windowTrackingService.GetProcessName(windowHandle);
+            _exclusionCheckedHandle = windowHandle;
+            _isExclusionCheckedHandleExcluded = processName is not null &&
+                                                excludedNames.Contains(processName, StringComparer.OrdinalIgnoreCase);
+        }
+
+        return _isExclusionCheckedHandleExcluded;
+    }
+
+    private void OnSettingsChanged(object? sender, EventArgs e)
+    {
+        // The excluded list may have changed.
+        _exclusionCheckedHandle = nint.Zero;
+    }
 
     private void OpenSwitch()
     {
@@ -278,5 +319,6 @@ public sealed class FocusSessionRecorder : IFocusSessionRecorder
         _disposed = true;
         End();
         _autoSaveTimer.Tick -= OnAutoSaveTimerTick;
+        _settingsService.SettingsChanged -= OnSettingsChanged;
     }
 }

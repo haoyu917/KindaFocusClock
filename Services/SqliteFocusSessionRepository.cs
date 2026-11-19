@@ -25,6 +25,8 @@ public sealed class SqliteFocusSessionRepository : IFocusSessionRepository
         }.ToString();
     }
 
+    public string DatabasePath => _databasePath;
+
     // %LOCALAPPDATA%\MyClock\focus.db
     public static string DefaultDatabasePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -182,14 +184,36 @@ public sealed class SqliteFocusSessionRepository : IFocusSessionRepository
         return sessions;
     }
 
-    public int DeleteSessionsStartedBefore(DateTimeOffset cutoff)
+    // Switches and visits are removed by ON DELETE CASCADE (foreign keys are on).
+    public int DeleteSessionsStartedBefore(DateTimeOffset cutoff, long? exceptSessionId = null)
     {
-        // Switches and visits are removed by ON DELETE CASCADE (foreign keys are on).
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM focus_sessions WHERE started_at < $cutoff;";
+        command.CommandText = "DELETE FROM focus_sessions WHERE started_at < $cutoff AND id IS NOT $exceptId;";
         command.Parameters.AddWithValue("$cutoff", FormatTimestamp(cutoff));
+        command.Parameters.AddWithValue("$exceptId", (object?)exceptSessionId ?? DBNull.Value);
         return command.ExecuteNonQuery();
+    }
+
+    public int DeleteAllSessions(long? exceptSessionId = null)
+    {
+        using var connection = OpenConnection();
+        int deleted;
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "DELETE FROM focus_sessions WHERE id IS NOT $exceptId;";
+            command.Parameters.AddWithValue("$exceptId", (object?)exceptSessionId ?? DBNull.Value);
+            deleted = command.ExecuteNonQuery();
+        }
+
+        // Give the freed space back to the file system.
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "VACUUM;";
+            command.ExecuteNonQuery();
+        }
+
+        return deleted;
     }
 
     private static long InsertSession(SqliteConnection connection, SqliteTransaction transaction, FocusSession session)

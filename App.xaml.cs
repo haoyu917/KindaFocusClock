@@ -15,6 +15,8 @@ public partial class App : Application
 
         var services = new ServiceCollection();
 
+        services.AddSingleton<ISettingsService>(_ => new SettingsService(SettingsService.DefaultSettingsPath));
+        services.AddSingleton<IShellService, ShellService>();
         services.AddSingleton<IClockService, ClockService>();
         services.AddSingleton<IStopwatchService, StopwatchService>();
         services.AddSingleton<IWindowTrackingService, WindowTrackingService>();

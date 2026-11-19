@@ -3,18 +3,11 @@ using MyClock.Models;
 
 namespace MyClock.Services;
 
-// Turns a saved focus session into a verdict, a comment, a tip, and a distraction breakdown.
+// Turns saved focus sessions into verdicts, comments, tips, and distraction breakdowns.
+// Thresholds and the comment language come from FocusSummaryOptions (the user's settings).
 public static class FocusSummaryBuilder
 {
     public const string UnknownApplicationName = "Unknown app";
-
-    // Sessions shorter than this are too short to rate.
-    public static readonly TimeSpan MinimumRatedDuration = TimeSpan.FromMinutes(1);
-
-    // Foreground rate thresholds for each verdict.
-    private const double LockedInRate = 0.85;
-    private const double InTheZoneRate = 0.65;
-    private const double HalfHereRate = 0.40;
 
     // Tip thresholds.
     private const int FrequentDistractionVisits = 3;
@@ -22,74 +15,11 @@ public static class FocusSummaryBuilder
     private static readonly TimeSpan MinimumDurationForSwitchRate = TimeSpan.FromMinutes(10);
     private const double HighSwitchesPerHour = 20;
 
-    private static readonly string[] WarmingUpMessages =
-    [
-        "Blink and it's over. Run a longer session for a real verdict."
-    ];
-
-    private static readonly string[] LockedInMessages =
-    [
-        "Laser focus. Your other apps are filing a missing-person report.",
-        "You and this window were basically inseparable. Very wholesome.",
-        "Distractions knocked. Nobody answered."
-    ];
-
-    private static readonly string[] InTheZoneMessages =
-    [
-        "Solid focus with a few sightseeing trips. Respectable.",
-        "Mostly on task. Your attention only stepped out for snacks.",
-        "Good rhythm. A couple of detours, nothing dramatic."
-    ];
-
-    private static readonly string[] HalfHereMessages =
-    [
-        "Your attention was on a part-time contract this session.",
-        "Half here, half somewhere more exciting, apparently.",
-        "A coin flip between working and wandering. The coin was busy."
-    ];
-
-    private static readonly string[] EscapeArtistMessages =
-    [
-        "Your focus went for a walk and took the scenic route.",
-        "The target window feels a little ignored. Maybe say hi next time?",
-        "Houdini would be proud. The work, less so."
-    ];
-
-    // Whole-day comments, kept short enough for one line on the summary page.
-    private const string NoSessionsTodayMessage = "Nothing tracked yet today. The day is young.";
-
-    private static readonly string[] DayWarmingUpMessages =
-    [
-        "Barely warmed up. The real work is still loading."
-    ];
-
-    private static readonly string[] DayLockedInMessages =
-    [
-        "Focus machine mode. Productivity wants your autograph.",
-        "Distractions called all day. Straight to voicemail."
-    ];
-
-    private static readonly string[] DayInTheZoneMessages =
-    [
-        "A good day's work with a few scenic detours.",
-        "Your focus took coffee breaks, not vacations."
-    ];
-
-    private static readonly string[] DayHalfHereMessages =
-    [
-        "A group project between you and your distractions.",
-        "Half the day was yours. The other half had plans."
-    ];
-
-    private static readonly string[] DayEscapeArtistMessages =
-    [
-        "Your attention went on tour. Book it a return ticket.",
-        "Focus was mostly a rumor today. Tomorrow is a fresh start."
-    ];
-
-    public static FocusSessionSummary Build(FocusSession session)
+    public static FocusSessionSummary Build(FocusSession session, FocusSummaryOptions? options = null)
     {
-        var verdict = GetVerdict(session);
+        options ??= FocusSummaryOptions.Default;
+        var comments = FocusComments.For(options.Language);
+        var verdict = GetVerdict(session, options);
         var switches = session.Switches;
 
         // Sessions saved before switch details existed have a count but no rows.
@@ -114,8 +44,9 @@ public static class FocusSummaryBuilder
             Session = session,
             Verdict = verdict,
             Headline = GetHeadline(verdict),
-            Message = PickMessage(verdict, session.Id),
-            Tip = GetTip(session, verdict, hasSwitchDetails, distractions, averageAway, switchesPerHour),
+            // The message depends on the session id, so a session always gets the same comment.
+            Message = Pick(GetSessionMessages(comments, verdict), session.Id),
+            Tip = GetTip(comments, session, verdict, hasSwitchDetails, distractions, averageAway, switchesPerHour),
             HasSwitchDetails = hasSwitchDetails,
             SwitchesPerHour = switchesPerHour,
             AverageAwayDuration = averageAway,
@@ -125,8 +56,10 @@ public static class FocusSummaryBuilder
     }
 
     // Totals for the sessions that started on the given local day.
-    public static FocusDaySummary BuildDay(IEnumerable<FocusSession> sessions, DateTime day)
+    public static FocusDaySummary BuildDay(IEnumerable<FocusSession> sessions, DateTime day, FocusSummaryOptions? options = null)
     {
+        options ??= FocusSummaryOptions.Default;
+        var comments = FocusComments.For(options.Language);
         var daySessions = sessions
             .Where(session => session.StartedAt.ToLocalTime().Date == day.Date)
             .ToList();
@@ -134,7 +67,7 @@ public static class FocusSummaryBuilder
         var monitored = Sum(daySessions.Select(session => session.MonitoredDuration));
         var foreground = Sum(daySessions.Select(session => session.ForegroundDuration));
         var rate = monitored > TimeSpan.Zero ? Math.Clamp(foreground / monitored, 0, 1) : 0;
-        var verdict = GetVerdict(monitored, rate);
+        var verdict = GetVerdict(monitored, rate, options);
         var distractions = BuildDistractions(daySessions.SelectMany(session => session.Switches).ToList());
 
         return new FocusDaySummary
@@ -146,29 +79,19 @@ public static class FocusSummaryBuilder
             SwitchCount = daySessions.Sum(session => session.SwitchCount),
             Verdict = verdict,
             Headline = daySessions.Count == 0 ? "NO DATA YET" : GetHeadline(verdict),
-            Message = daySessions.Count == 0 ? NoSessionsTodayMessage : PickDayMessage(verdict, day),
+            // The day's comment changes from day to day but stays the same within a day.
+            Message = daySessions.Count == 0
+                ? comments.NoSessionsToday
+                : Pick(GetDayMessages(comments, verdict), day.DayOfYear),
             TopDistraction = distractions.Count > 0 ? distractions[0] : null
         };
     }
 
-    public static FocusVerdict GetVerdict(FocusSession session) =>
-        GetVerdict(session.MonitoredDuration, session.ForegroundRate);
+    public static FocusVerdict GetVerdict(FocusSession session, FocusSummaryOptions? options = null) =>
+        GetVerdict(session.MonitoredDuration, session.ForegroundRate, options ?? FocusSummaryOptions.Default);
 
-    private static FocusVerdict GetVerdict(TimeSpan monitoredDuration, double foregroundRate)
-    {
-        if (monitoredDuration < MinimumRatedDuration)
-        {
-            return FocusVerdict.WarmingUp;
-        }
-
-        return foregroundRate switch
-        {
-            >= LockedInRate => FocusVerdict.LockedIn,
-            >= InTheZoneRate => FocusVerdict.InTheZone,
-            >= HalfHereRate => FocusVerdict.HalfHere,
-            _ => FocusVerdict.EscapeArtist
-        };
-    }
+    // "Tip: " or "建议：", shown before a tip.
+    public static string GetTipLabel(CommentLanguage language) => FocusComments.For(language).TipLabel;
 
     // 45s, 4m 05s, 1h 02m
     public static string FormatDuration(TimeSpan duration)
@@ -199,6 +122,26 @@ public static class FocusSummaryBuilder
 
     public static string FormatTimes(int count) => count == 1 ? "1 time" : $"{count} times";
 
+    private static FocusVerdict GetVerdict(TimeSpan monitoredDuration, double foregroundRate, FocusSummaryOptions options)
+    {
+        if (monitoredDuration < options.MinimumRatedDuration || monitoredDuration <= TimeSpan.Zero)
+        {
+            return FocusVerdict.WarmingUp;
+        }
+
+        if (foregroundRate >= options.LockedInRate)
+        {
+            return FocusVerdict.LockedIn;
+        }
+
+        if (foregroundRate >= options.InTheZoneRate)
+        {
+            return FocusVerdict.InTheZone;
+        }
+
+        return foregroundRate >= options.HalfHereRate ? FocusVerdict.HalfHere : FocusVerdict.EscapeArtist;
+    }
+
     private static string GetHeadline(FocusVerdict verdict) => verdict switch
     {
         FocusVerdict.LockedIn => "LOCKED IN",
@@ -208,37 +151,28 @@ public static class FocusSummaryBuilder
         _ => "WARMING UP"
     };
 
-    // The message depends on the session id, so a session always gets the same comment.
-    private static string PickMessage(FocusVerdict verdict, long sessionId)
+    private static string[] GetSessionMessages(FocusComments comments, FocusVerdict verdict) => verdict switch
     {
-        var messages = verdict switch
-        {
-            FocusVerdict.LockedIn => LockedInMessages,
-            FocusVerdict.InTheZone => InTheZoneMessages,
-            FocusVerdict.HalfHere => HalfHereMessages,
-            FocusVerdict.EscapeArtist => EscapeArtistMessages,
-            _ => WarmingUpMessages
-        };
+        FocusVerdict.LockedIn => comments.LockedIn,
+        FocusVerdict.InTheZone => comments.InTheZone,
+        FocusVerdict.HalfHere => comments.HalfHere,
+        FocusVerdict.EscapeArtist => comments.EscapeArtist,
+        _ => comments.WarmingUp
+    };
 
-        return messages[(int)(Math.Abs(sessionId) % messages.Length)];
-    }
-
-    // The day's comment changes from day to day but stays the same within a day.
-    private static string PickDayMessage(FocusVerdict verdict, DateTime day)
+    private static string[] GetDayMessages(FocusComments comments, FocusVerdict verdict) => verdict switch
     {
-        var messages = verdict switch
-        {
-            FocusVerdict.LockedIn => DayLockedInMessages,
-            FocusVerdict.InTheZone => DayInTheZoneMessages,
-            FocusVerdict.HalfHere => DayHalfHereMessages,
-            FocusVerdict.EscapeArtist => DayEscapeArtistMessages,
-            _ => DayWarmingUpMessages
-        };
+        FocusVerdict.LockedIn => comments.DayLockedIn,
+        FocusVerdict.InTheZone => comments.DayInTheZone,
+        FocusVerdict.HalfHere => comments.DayHalfHere,
+        FocusVerdict.EscapeArtist => comments.DayEscapeArtist,
+        _ => comments.DayWarmingUp
+    };
 
-        return messages[day.DayOfYear % messages.Length];
-    }
+    private static string Pick(string[] messages, long seed) => messages[(int)(Math.Abs(seed) % messages.Length)];
 
     private static string GetTip(
+        FocusComments comments,
         FocusSession session,
         FocusVerdict verdict,
         bool hasSwitchDetails,
@@ -248,38 +182,36 @@ public static class FocusSummaryBuilder
     {
         if (verdict == FocusVerdict.WarmingUp)
         {
-            return "Sessions longer than a minute get the full report.";
+            return comments.WarmingUpTip;
         }
 
         if (session.SwitchCount == 0)
         {
-            return "Zero switches. Not a single detour. Frame this one.";
+            return comments.ZeroSwitchesTip;
         }
 
         if (!hasSwitchDetails)
         {
-            return "This session was recorded before detour details existed, so there's no breakdown.";
+            return comments.NoDetailsTip;
         }
 
         var topDistraction = distractions.Count > 0 ? distractions[0] : null;
         if (topDistraction is not null && topDistraction.VisitCount >= FrequentDistractionVisits)
         {
-            return $"{topDistraction.Name} pulled you away {FormatTimes(topDistraction.VisitCount)}. " +
-                   $"Muting it next session could win back {FormatDuration(topDistraction.TimeSpent)}.";
+            return comments.FrequentDistractionTip(topDistraction.Name, topDistraction.VisitCount, topDistraction.TimeSpent);
         }
 
         if (averageAway >= LongAverageAway)
         {
-            return $"Your average detour lasted {FormatDuration(averageAway)}. " +
-                   "Quick breaks are fine; long ones snowball.";
+            return comments.LongAverageAwayTip(averageAway);
         }
 
         if (session.MonitoredDuration >= MinimumDurationForSwitchRate && switchesPerHour >= HighSwitchesPerHour)
         {
-            return $"{switchesPerHour:0} switches an hour. Try batching messages into planned breaks.";
+            return comments.HighSwitchRateTip(switchesPerHour);
         }
 
-        return "Detours were short and rare. Keep that energy.";
+        return comments.CalmTip;
     }
 
     private static IReadOnlyList<FocusDistraction> BuildDistractions(IReadOnlyList<FocusSwitch> switches)

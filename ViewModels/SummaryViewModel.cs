@@ -19,16 +19,24 @@ public sealed class SummaryViewModel : ViewModelBase
 
     private readonly IFocusSessionRepository _repository;
     private readonly IFocusSessionRecorder _focusSessionRecorder;
+    private readonly ISettingsService _settingsService;
+
+    // Rating thresholds and comment language, read from settings each time the page loads.
+    private FocusSummaryOptions _options = FocusSummaryOptions.Default;
     private SummarySessionItem? _selectedSession;
     private FocusSessionSummary? _summary;
     private IReadOnlyList<SummaryDistractionItem> _distractions = [];
     private TodaySummaryItem _today = new(FocusSummaryBuilder.BuildDay([], DateTime.Today));
     private string _emptyMessage = NoSessionsMessage;
 
-    public SummaryViewModel(IFocusSessionRepository repository, IFocusSessionRecorder focusSessionRecorder)
+    public SummaryViewModel(
+        IFocusSessionRepository repository,
+        IFocusSessionRecorder focusSessionRecorder,
+        ISettingsService settingsService)
     {
         _repository = repository;
         _focusSessionRecorder = focusSessionRecorder;
+        _settingsService = settingsService;
     }
 
     // Recent sessions, newest first.
@@ -44,7 +52,7 @@ public sealed class SummaryViewModel : ViewModelBase
                 return;
             }
 
-            _summary = value is null ? null : FocusSummaryBuilder.Build(value.Session);
+            _summary = value is null ? null : FocusSummaryBuilder.Build(value.Session, _options);
             _distractions = _summary is null
                 ? []
                 : _summary.Distractions.Take(MaxDistractionRows).Select(d => new SummaryDistractionItem(d)).ToList();
@@ -69,7 +77,9 @@ public sealed class SummaryViewModel : ViewModelBase
 
     public string Message => _summary?.Message ?? string.Empty;
 
-    public string Tip => _summary is null ? string.Empty : $"Tip: {_summary.Tip}";
+    public string Tip => _summary is null
+        ? string.Empty
+        : FocusSummaryBuilder.GetTipLabel(_options.Language) + _summary.Tip;
 
     // The reviewed session's target window, shown under the page title.
     public string HeaderSubtitle => _summary is null
@@ -90,7 +100,7 @@ public sealed class SummaryViewModel : ViewModelBase
 
     public string SwitchCountText => _summary?.Session.SwitchCount.ToString() ?? "--";
 
-    public string SwitchRateText => _summary is null || _summary.Session.MonitoredDuration < FocusSummaryBuilder.MinimumRatedDuration
+    public string SwitchRateText => _summary is null || _summary.Verdict == FocusVerdict.WarmingUp
         ? "Too short to rate"
         : $"{_summary.SwitchesPerHour:0.#} per hour";
 
@@ -147,6 +157,7 @@ public sealed class SummaryViewModel : ViewModelBase
     public void OnPageLoaded()
     {
         _focusSessionRecorder.Flush();
+        _options = FocusSummaryOptions.FromSettings(_settingsService.Current);
         LoadSessions();
     }
 
@@ -160,7 +171,7 @@ public sealed class SummaryViewModel : ViewModelBase
             // Only the days kept by the history cleanup are listed.
             var today = DateTime.Today;
             sessions = _repository.GetSessionsStartedBetween(
-                FocusHistoryCleanupService.GetRetentionStart(today),
+                FocusHistoryCleanupService.GetRetentionStart(today, _settingsService.Current.HistoryRetentionDays),
                 new DateTimeOffset(today.AddDays(1)));
             _emptyMessage = NoSessionsMessage;
         }
@@ -177,7 +188,7 @@ public sealed class SummaryViewModel : ViewModelBase
             .ThenByDescending(session => session.Id)
             .ToList();
 
-        _today = new TodaySummaryItem(FocusSummaryBuilder.BuildDay(listedSessions, DateTime.Today));
+        _today = new TodaySummaryItem(FocusSummaryBuilder.BuildDay(listedSessions, DateTime.Today, _options));
 
         Sessions.Clear();
         foreach (var session in listedSessions)
