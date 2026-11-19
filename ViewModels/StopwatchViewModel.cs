@@ -11,14 +11,11 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 {
     private readonly IStopwatchService _stopwatchService;
     private readonly IWindowTrackingService _windowTrackingService;
+    private readonly IFocusSessionRecorder _focusSessionRecorder;
     private readonly DispatcherTimer _refreshTimer;
     private readonly RelayCommand _startCommand;
     private readonly RelayCommand _pauseCommand;
     private readonly RelayCommand _resetCommand;
-
-    private readonly System.Diagnostics.Stopwatch _monitoringSessionStopwatch = new();
-
-    private readonly System.Diagnostics.Stopwatch _foregroundSessionStopwatch = new();
 
     private readonly Dictionary<nint, System.Diagnostics.Stopwatch> _todayActiveStopwatches = new();
     private bool _isPageActive;
@@ -34,11 +31,15 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
     private string? _lastNonTargetWindowTitle;
     private bool _disposed;
 
-    public StopwatchViewModel(IStopwatchService stopwatchService, IWindowTrackingService windowTrackingService)
+    public StopwatchViewModel(
+        IStopwatchService stopwatchService,
+        IWindowTrackingService windowTrackingService,
+        IFocusSessionRecorder focusSessionRecorder)
     {
 
         _stopwatchService = stopwatchService;
         _windowTrackingService = windowTrackingService;
+        _focusSessionRecorder = focusSessionRecorder;
         OpenWindows = new ObservableCollection<OpenWindowInfo>(_windowTrackingService.OpenWindows);
         _windowTrackingService.WindowsChanged += OnWindowsChanged;
         _windowTrackingService.ForegroundWindowChanged += OnForegroundWindowChanged;
@@ -127,16 +128,20 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
                 return "0.0%";
             }
 
-            if (_monitoringSessionStopwatch.Elapsed <= TimeSpan.Zero)
+            var monitoredDuration = _focusSessionRecorder.MonitoredDuration;
+            if (monitoredDuration <= TimeSpan.Zero)
             {
                 return "--";
             }
 
-            var percentage = _foregroundSessionStopwatch.Elapsed.TotalMilliseconds /
-                             _monitoringSessionStopwatch.Elapsed.TotalMilliseconds * 100;
+            var percentage = _focusSessionRecorder.ForegroundDuration.TotalMilliseconds /
+                             monitoredDuration.TotalMilliseconds * 100;
             return $"{Math.Clamp(percentage, 0, 100):0.0}%";
         }
     }
+
+    // Times focus left the target for another window in the current session.
+    public int SessionSwitchCount => _focusSessionRecorder.SwitchCount;
 
     public string TodayActiveTime
     {
@@ -188,6 +193,14 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
             if (!_isRefreshingWindows)
             {
                 _isWindowLost = false;
+
+                // Changing targets closes the recorded session; refreshing the window
+                // list, or re-selecting a target that came back, keeps it open.
+                // A new session begins once monitoring runs for the new target.
+                if (value is null || !_focusSessionRecorder.IsRecording(value.Handle))
+                {
+                    _focusSessionRecorder.End();
+                }
             }
 
             if (value is not null)
@@ -199,8 +212,6 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
                 {
                     // Allow the result to show normally
                     _isPercentageCleared = false;
-                    _monitoringSessionStopwatch.Reset();
-                    _foregroundSessionStopwatch.Reset();
                     _activeDate = DateTime.Today;
                 }
             }
@@ -267,8 +278,8 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
 
         IsTrackingEnabled = false;
         StopSessionMeasurement();
-        _monitoringSessionStopwatch.Reset();
-        _foregroundSessionStopwatch.Reset();
+        // Saved session history is kept; Reset only closes the current session.
+        _focusSessionRecorder.End();
         _todayActiveStopwatches.Clear();
         _isPercentageCleared = true;
         _lastNonTargetWindowTitle = null;
@@ -383,6 +394,7 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CanPause));
         OnPropertyChanged(nameof(CanReset));
         OnPropertyChanged(nameof(ForegroundTimePercentage));
+        OnPropertyChanged(nameof(SessionSwitchCount));
         OnPropertyChanged(nameof(TodayActiveTime));
         OnPropertyChanged(nameof(LastTransitionWindow));
     }
@@ -390,31 +402,31 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
     private void UpdateSessionMeasurement(bool isForeground)
     {
         EnsureCurrentDay();
-        // The session denominator includes time spent in other real windows.
-        // Only the target's foreground time pauses when focus moves away.
-        _monitoringSessionStopwatch.Start();
+        if (SelectedWindow is null)
+        {
+            return;
+        }
+
+        if (!_focusSessionRecorder.IsRecording(SelectedWindow.Handle))
+        {
+            _focusSessionRecorder.Begin(SelectedWindow);
+        }
+
+        // The recorder measures the session and counts switches away from the target.
+        _focusSessionRecorder.Update(isMonitoring: true);
         if (isForeground)
         {
-            _foregroundSessionStopwatch.Start();
-            if (SelectedWindow is not null)
-            {
-                GetTodayActiveStopwatch(SelectedWindow.Handle).Start();
-            }
+            GetTodayActiveStopwatch(SelectedWindow.Handle).Start();
         }
         else
         {
-            _foregroundSessionStopwatch.Stop();
-            if (SelectedWindow is not null)
-            {
-                StopTodayActiveMeasurement(SelectedWindow.Handle);
-            }
+            StopTodayActiveMeasurement(SelectedWindow.Handle);
         }
     }
 
     private void StopSessionMeasurement()
     {
-        _monitoringSessionStopwatch.Stop();
-        _foregroundSessionStopwatch.Stop();
+        _focusSessionRecorder.Update(isMonitoring: false);
         if (SelectedWindow is not null)
         {
             StopTodayActiveMeasurement(SelectedWindow.Handle);

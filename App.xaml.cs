@@ -18,6 +18,9 @@ public partial class App : Application
         services.AddSingleton<IClockService, ClockService>();
         services.AddSingleton<IStopwatchService, StopwatchService>();
         services.AddSingleton<IWindowTrackingService, WindowTrackingService>();
+        services.AddSingleton<IFocusSessionRepository>(_ =>
+            new SqliteFocusSessionRepository(SqliteFocusSessionRepository.DefaultDatabasePath));
+        services.AddSingleton<IFocusSessionRecorder, FocusSessionRecorder>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ClockViewModel>();

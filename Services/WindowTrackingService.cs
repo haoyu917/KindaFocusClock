@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Threading;
@@ -31,6 +33,30 @@ public sealed class WindowTrackingService : IWindowTrackingService
 
     public bool IsForeground(nint windowHandle) =>
         windowHandle != nint.Zero && windowHandle == _foregroundWindowHandle;
+
+    public bool IsCurrentProcessWindow(nint windowHandle) =>
+        windowHandle != nint.Zero &&
+        GetWindowThreadProcessId(windowHandle, out var processId) != 0 &&
+        processId == Environment.ProcessId;
+
+    public string? GetProcessName(nint windowHandle)
+    {
+        if (windowHandle == nint.Zero || GetWindowThreadProcessId(windowHandle, out var processId) == 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var process = Process.GetProcessById((int)processId);
+            return process.ProcessName;
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or Win32Exception)
+        {
+            // The process exited or cannot be inspected (for example an elevated process).
+            return null;
+        }
+    }
 
     private void OnTimerTick(object? sender, EventArgs e)
     {

@@ -9,6 +9,8 @@ MyClock is a lightweight Windows productivity timer built with WPF and .NET 10. 
 - **Session Tracking** — pauses automatically when the target window is no longer in the foreground or when monitoring is paused.
 - **Today Active** — tracks how much time each monitored window has spent in the foreground during the current day.
 - **Foreground Rate** — shows the percentage of the current monitoring session spent actively using the selected window.
+- **Switches** — counts how many times focus left the selected window during the current session.
+- **Session History** — saves every monitoring session, with its switch count and foreground rate, to a local SQLite database.
 - **Settings** — provides the foundation for configurable themes, alarms, and future preferences.
 
 ## Screenshots
@@ -88,9 +90,28 @@ Shows the percentage of the current monitoring session during which the selected
 
 The value is calculated from actual elapsed time rather than UI refresh ticks.
 
+### Switches
+
+Counts how many times focus left the target for another application window during the current session. Moving between several other windows before returning to the target counts as one switch. Switching to MyClock itself (for example to pause or change targets) and the brief moment with no foreground window during Alt+Tab are not counted, and nothing is counted while monitoring is paused or the monitor page is hidden.
+
 ### Last Transition
 
 Shows the previous target window when the selected target changes. It displays `--` until a previous target exists.
+
+## Focus session history
+
+Every monitoring session is saved to a local SQLite database at `%LOCALAPPDATA%\MyClock\focus.db`. A session starts when monitoring begins for a target and ends when you select another target, use **Reset**, or close MyClock. Each session records:
+
+| Column | Meaning |
+| --- | --- |
+| `window_title` | Title of the target window when the session started. |
+| `process_name` | Executable name of the target, such as `devenv`; empty if it could not be read. |
+| `started_at`, `ended_at` | Session start and end as UTC timestamps. `ended_at` is empty if MyClock did not exit normally. |
+| `monitored_ms` | Time spent monitoring, including time other windows were in the foreground. |
+| `foreground_ms` | Time the target was in the foreground. `foreground_ms / monitored_ms` is the foreground rate. |
+| `switch_count` | Number of switches away from the target, as shown in **Switches**. |
+
+Progress is saved every 30 seconds while a session is open. **Reset** clears the values on screen but keeps the saved history.
 
 ## Clock and Settings
 

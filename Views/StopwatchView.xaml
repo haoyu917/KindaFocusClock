@@ -107,7 +107,7 @@
                 </StackPanel>
             </StackPanel>
         </Border>
-        <UniformGrid Grid.Row="3" Columns="3">
+        <UniformGrid Grid.Row="3" Columns="4">
             <Border Margin="0,0,4,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
                 <StackPanel>
                     <TextBlock FontFamily="Cascadia Mono, Consolas"
@@ -136,6 +136,21 @@
                                Foreground="{StaticResource SuccessBrush}"
                                Text="{Binding ForegroundTimePercentage}" />
                     <TextBlock FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" Text="Current session" />
+                </StackPanel>
+            </Border>
+            <Border Margin="4,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
+                <StackPanel>
+                    <TextBlock FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SecondaryTextBrush}"
+                               Text="SWITCHES" />
+                    <TextBlock Margin="0,4,0,0"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="16"
+                               Foreground="{StaticResource WarningBrush}"
+                               Text="{Binding SessionSwitchCount}" />
+                    <TextBlock FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" Text="Times focus left target" />
                 </StackPanel>
             </Border>
             <Border Margin="4,0,0,0" Padding="10,8" Style="{StaticResource TelemetryCardStyle}">
