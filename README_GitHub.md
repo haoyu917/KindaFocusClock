@@ -63,7 +63,7 @@ Shows the window currently selected for monitoring. The status badge reports the
 
 ### Current Session
 
-Shows the elapsed time for the current monitoring session in `minutes:seconds.tenths` format.
+Shows the elapsed time for the current monitoring session in `minutes:seconds.tenths` format, switching to `hours:minutes:seconds.tenths` once the session reaches one hour.
 
 The timer runs only while the selected target is active. It pauses when monitoring is paused, the target is in the background, or the monitor page is hidden.
 
