@@ -12,4 +12,8 @@ public interface IFocusSessionRepository
     // Returns sessions with from <= StartedAt < to, oldest first, including their
     // switches and visits.
     IReadOnlyList<FocusSession> GetSessionsStartedBetween(DateTimeOffset from, DateTimeOffset to);
+
+    // Deletes sessions with StartedAt < cutoff, with their switches and visits.
+    // Returns the number of sessions deleted.
+    int DeleteSessionsStartedBefore(DateTimeOffset cutoff);
 }

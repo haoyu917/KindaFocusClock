@@ -182,6 +182,16 @@ public sealed class SqliteFocusSessionRepository : IFocusSessionRepository
         return sessions;
     }
 
+    public int DeleteSessionsStartedBefore(DateTimeOffset cutoff)
+    {
+        // Switches and visits are removed by ON DELETE CASCADE (foreign keys are on).
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM focus_sessions WHERE started_at < $cutoff;";
+        command.Parameters.AddWithValue("$cutoff", FormatTimestamp(cutoff));
+        return command.ExecuteNonQuery();
+    }
+
     private static long InsertSession(SqliteConnection connection, SqliteTransaction transaction, FocusSession session)
     {
         using var command = CreateCommand(connection, transaction, """

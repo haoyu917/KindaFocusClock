@@ -21,6 +21,7 @@ public partial class App : Application
         services.AddSingleton<IFocusSessionRepository>(_ =>
             new SqliteFocusSessionRepository(SqliteFocusSessionRepository.DefaultDatabasePath));
         services.AddSingleton<IFocusSessionRecorder, FocusSessionRecorder>();
+        services.AddSingleton<IFocusHistoryCleanupService, FocusHistoryCleanupService>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ClockViewModel>();
@@ -30,6 +31,9 @@ public partial class App : Application
         services.AddSingleton<MainWindow>();
 
         _serviceProvider = services.BuildServiceProvider();
+
+        // Delete sessions older than the kept days now and at each new day.
+        _serviceProvider.GetRequiredService<IFocusHistoryCleanupService>().Start();
 
         _serviceProvider.GetRequiredService<MainWindow>().Show();
     }

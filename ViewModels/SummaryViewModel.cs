@@ -9,9 +9,6 @@ namespace MyClock.ViewModels;
 
 public sealed class SummaryViewModel : ViewModelBase
 {
-    // Sessions older than this are not listed.
-    private static readonly TimeSpan HistoryRange = TimeSpan.FromDays(30);
-
     // Sessions shorter than this are accidental starts and are not listed.
     private static readonly TimeSpan MinimumListedDuration = TimeSpan.FromSeconds(1);
 
@@ -25,6 +22,7 @@ public sealed class SummaryViewModel : ViewModelBase
     private SummarySessionItem? _selectedSession;
     private FocusSessionSummary? _summary;
     private IReadOnlyList<SummaryDistractionItem> _distractions = [];
+    private TodaySummaryItem _today = new(FocusSummaryBuilder.BuildDay([], DateTime.Today));
     private string _emptyMessage = NoSessionsMessage;
 
     public SummaryViewModel(IFocusSessionRepository repository, IFocusSessionRecorder focusSessionRecorder)
@@ -55,6 +53,9 @@ public sealed class SummaryViewModel : ViewModelBase
             OnPropertyChanged(string.Empty);
         }
     }
+
+    // Totals for sessions that started today.
+    public TodaySummaryItem Today => _today;
 
     public bool HasSessions => Sessions.Count > 0;
 
@@ -156,8 +157,11 @@ public sealed class SummaryViewModel : ViewModelBase
         IReadOnlyList<FocusSession> sessions;
         try
         {
-            var now = DateTimeOffset.Now;
-            sessions = _repository.GetSessionsStartedBetween(now - HistoryRange, now.AddDays(1));
+            // Only the days kept by the history cleanup are listed.
+            var today = DateTime.Today;
+            sessions = _repository.GetSessionsStartedBetween(
+                FocusHistoryCleanupService.GetRetentionStart(today),
+                new DateTimeOffset(today.AddDays(1)));
             _emptyMessage = NoSessionsMessage;
         }
         catch (Exception exception) when (exception is DbException or IOException or UnauthorizedAccessException)
@@ -167,11 +171,16 @@ public sealed class SummaryViewModel : ViewModelBase
             Debug.WriteLine($"Failed to load focus sessions: {exception.Message}");
         }
 
+        var listedSessions = sessions
+            .Where(session => session.MonitoredDuration >= MinimumListedDuration)
+            .OrderByDescending(session => session.StartedAt)
+            .ThenByDescending(session => session.Id)
+            .ToList();
+
+        _today = new TodaySummaryItem(FocusSummaryBuilder.BuildDay(listedSessions, DateTime.Today));
+
         Sessions.Clear();
-        foreach (var session in sessions
-                     .Where(session => session.MonitoredDuration >= MinimumListedDuration)
-                     .OrderByDescending(session => session.StartedAt)
-                     .ThenByDescending(session => session.Id))
+        foreach (var session in listedSessions)
         {
             Sessions.Add(new SummarySessionItem(session));
         }
@@ -191,5 +200,6 @@ public sealed class SummaryViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasSessions));
         OnPropertyChanged(nameof(HasNoSessions));
         OnPropertyChanged(nameof(EmptyMessage));
+        OnPropertyChanged(nameof(Today));
     }
 }

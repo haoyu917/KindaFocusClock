@@ -246,6 +246,110 @@
                         </StackPanel>
                     </Border>
                 </Grid>
+
+                <!-- Totals for today's sessions; DataContext is the TodaySummaryItem -->
+                <Border Margin="0,10,0,0"
+                        Padding="14,12"
+                        DataContext="{Binding Today}"
+                        Style="{StaticResource MissionCardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Margin="0,0,10,0"
+                                       VerticalAlignment="Center"
+                                       FontFamily="Cascadia Mono, Consolas"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="TODAY SO FAR" />
+                            <Border Grid.Column="1"
+                                    Padding="9,4"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource VerdictBadgeStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="6" Height="6" Margin="0,0,6,0" Style="{StaticResource VerdictDotStyle}" />
+                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding Headline}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Grid.Column="2"
+                                       Margin="12,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                       Text="{Binding Message}"
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                        <UniformGrid Margin="0,10,0,0" Columns="5">
+                            <StackPanel Margin="0,0,8,0">
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="SESSIONS" />
+                                <TextBlock Margin="0,3,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="14"
+                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                           Text="{Binding SessionCountText}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,0">
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="FOCUS TIME" />
+                                <TextBlock Margin="0,3,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="14"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           Text="{Binding FocusTimeText}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,0">
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="FOREGROUND" />
+                                <TextBlock Margin="0,3,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="14"
+                                           Style="{StaticResource VerdictValueTextStyle}"
+                                           Text="{Binding RateText}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,0">
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="SWITCHES" />
+                                <TextBlock Margin="0,3,0,0"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="14"
+                                           Foreground="{StaticResource WarningBrush}"
+                                           Text="{Binding SwitchCountText}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                           Text="TOP DISTRACTION" />
+                                <TextBlock Margin="0,3,0,0"
+                                           FontSize="13"
+                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                           Text="{Binding TopDistractionText}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding TopDistractionText}" />
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>

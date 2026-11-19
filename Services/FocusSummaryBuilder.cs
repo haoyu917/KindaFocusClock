@@ -55,6 +55,38 @@ public static class FocusSummaryBuilder
         "Houdini would be proud. The work, less so."
     ];
 
+    // Whole-day comments, kept short enough for one line on the summary page.
+    private const string NoSessionsTodayMessage = "Nothing tracked yet today. The day is young.";
+
+    private static readonly string[] DayWarmingUpMessages =
+    [
+        "Barely warmed up. The real work is still loading."
+    ];
+
+    private static readonly string[] DayLockedInMessages =
+    [
+        "Focus machine mode. Productivity wants your autograph.",
+        "Distractions called all day. Straight to voicemail."
+    ];
+
+    private static readonly string[] DayInTheZoneMessages =
+    [
+        "A good day's work with a few scenic detours.",
+        "Your focus took coffee breaks, not vacations."
+    ];
+
+    private static readonly string[] DayHalfHereMessages =
+    [
+        "A group project between you and your distractions.",
+        "Half the day was yours. The other half had plans."
+    ];
+
+    private static readonly string[] DayEscapeArtistMessages =
+    [
+        "Your attention went on tour. Book it a return ticket.",
+        "Focus was mostly a rumor today. Tomorrow is a fresh start."
+    ];
+
     public static FocusSessionSummary Build(FocusSession session)
     {
         var verdict = GetVerdict(session);
@@ -92,14 +124,44 @@ public static class FocusSummaryBuilder
         };
     }
 
-    public static FocusVerdict GetVerdict(FocusSession session)
+    // Totals for the sessions that started on the given local day.
+    public static FocusDaySummary BuildDay(IEnumerable<FocusSession> sessions, DateTime day)
     {
-        if (session.MonitoredDuration < MinimumRatedDuration)
+        var daySessions = sessions
+            .Where(session => session.StartedAt.ToLocalTime().Date == day.Date)
+            .ToList();
+
+        var monitored = Sum(daySessions.Select(session => session.MonitoredDuration));
+        var foreground = Sum(daySessions.Select(session => session.ForegroundDuration));
+        var rate = monitored > TimeSpan.Zero ? Math.Clamp(foreground / monitored, 0, 1) : 0;
+        var verdict = GetVerdict(monitored, rate);
+        var distractions = BuildDistractions(daySessions.SelectMany(session => session.Switches).ToList());
+
+        return new FocusDaySummary
+        {
+            SessionCount = daySessions.Count,
+            MonitoredDuration = monitored,
+            ForegroundDuration = foreground,
+            ForegroundRate = rate,
+            SwitchCount = daySessions.Sum(session => session.SwitchCount),
+            Verdict = verdict,
+            Headline = daySessions.Count == 0 ? "NO DATA YET" : GetHeadline(verdict),
+            Message = daySessions.Count == 0 ? NoSessionsTodayMessage : PickDayMessage(verdict, day),
+            TopDistraction = distractions.Count > 0 ? distractions[0] : null
+        };
+    }
+
+    public static FocusVerdict GetVerdict(FocusSession session) =>
+        GetVerdict(session.MonitoredDuration, session.ForegroundRate);
+
+    private static FocusVerdict GetVerdict(TimeSpan monitoredDuration, double foregroundRate)
+    {
+        if (monitoredDuration < MinimumRatedDuration)
         {
             return FocusVerdict.WarmingUp;
         }
 
-        return session.ForegroundRate switch
+        return foregroundRate switch
         {
             >= LockedInRate => FocusVerdict.LockedIn,
             >= InTheZoneRate => FocusVerdict.InTheZone,
@@ -159,6 +221,21 @@ public static class FocusSummaryBuilder
         };
 
         return messages[(int)(Math.Abs(sessionId) % messages.Length)];
+    }
+
+    // The day's comment changes from day to day but stays the same within a day.
+    private static string PickDayMessage(FocusVerdict verdict, DateTime day)
+    {
+        var messages = verdict switch
+        {
+            FocusVerdict.LockedIn => DayLockedInMessages,
+            FocusVerdict.InTheZone => DayInTheZoneMessages,
+            FocusVerdict.HalfHere => DayHalfHereMessages,
+            FocusVerdict.EscapeArtist => DayEscapeArtistMessages,
+            _ => DayWarmingUpMessages
+        };
+
+        return messages[day.DayOfYear % messages.Length];
     }
 
     private static string GetTip(

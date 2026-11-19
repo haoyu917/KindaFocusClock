@@ -101,7 +101,7 @@ Shows the previous target window when the selected target changes. It displays `
 
 ## Focus Summary
 
-The **Summary** page reviews one monitoring session at a time. Choose a session from the list in the top-right corner; the newest session from the last 30 days is shown first, and the session in progress includes its latest data.
+The **Summary** page reviews one monitoring session at a time. Choose a session from the list in the top-right corner; the newest of the last 7 days' sessions is shown first, and the session in progress includes its latest data.
 
 The verdict is based on the session's foreground rate:
 
@@ -122,6 +122,7 @@ The page also shows:
 - **AVG DETOUR** — average and longest time away from the target per switch.
 - **TOP DISTRACTION** — the application you switched to most often, with its visit count and time.
 - **WHERE YOUR FOCUS WENT** — the top three applications visited while away, with each one's share of the time away.
+- **TODAY SO FAR** — totals for all sessions that started today: a verdict and comment for the whole day, the number of sessions, focus time, the overall foreground rate, switches, and the day's top distraction. A session that runs past midnight counts toward the day it started.
 
 ## Focus session history
 
@@ -144,6 +145,8 @@ Each switch is also saved in detail, so later summaries can show where time away
 Window titles of visited windows are stored only in this local file. Sessions recorded before switch details were added keep their `switch_count` but have no `focus_switches` rows.
 
 Progress is saved every 30 seconds while a session is open. **Reset** clears the values on screen but keeps the saved history.
+
+MyClock keeps the last 7 days of history: today and the six days before it. Older sessions, with their switches and visits, are deleted when MyClock starts and again each time a new day begins.
 
 ## Clock and Settings
 
