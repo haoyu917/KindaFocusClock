@@ -115,7 +115,9 @@ public sealed class SummaryViewModel : ViewModelBase
         }
     }
 
-    public string TopDistractionName => _summary?.TopDistraction?.Name ?? "None";
+    // "--" when switches happened but their details were not recorded.
+    public string TopDistractionName => _summary?.TopDistraction?.Name ??
+                                        (_summary is { HasSwitchDetails: false } ? "--" : "None");
 
     public string TopDistractionDetail
     {
