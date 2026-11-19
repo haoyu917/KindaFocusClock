@@ -1,9 +1,10 @@
 # MyClock
 
-MyClock is a Windows WPF desktop application with three sections:
+MyClock is a Windows WPF desktop application with four sections:
 
 - **Clock** — displays the current local time.
-- **Window Monitor** — measures how long a selected application window remains the active foreground window.
+- **Window Monitor** — measures how long a selected application window remains the active foreground window, counts switches away from it, and saves each session to a local history.
+- **Summary** — rates each monitoring session, with a comment, a tip, and where your focus went.
 - **Settings** — reserved for future themes, alarms, and other preferences.
 
 ## Requirements
@@ -28,7 +29,7 @@ You can also open `WpfApp1.sln` in Visual Studio or another .NET-compatible Wind
 ## How to use the application
 
 1. Start the application.
-2. Use the navigation panel on the left to choose **Clock**, **Window Monitor**, or **Settings**.
+2. Use the navigation panel on the left to choose **Clock**, **Window Monitor**, **Summary**, or **Settings**.
 3. In **Window Monitor**, select an open window from **TARGET WINDOW**.
 4. Select **Start / Continue** to begin monitoring.
 5. Work in the selected window. The timer runs while that window is the Windows foreground window and waits while another window is active.
@@ -73,9 +74,62 @@ Shows how long the selected window has been the foreground window today, in `hou
 
 Shows the percentage of the current monitoring session during which the selected window was in the foreground. It is calculated from actual elapsed time rather than UI refresh ticks.
 
+### Switches
+
+Counts how many times focus left the target for another application window during the current session. Moving between several other windows before returning to the target counts as one switch. Switching to MyClock itself (for example to pause or change targets) and the brief moment with no foreground window during Alt+Tab are not counted, and nothing is counted while monitoring is paused or the monitor page is hidden.
+
 ### Last Transition
 
 Shows the previous target window when the selected target changes. It displays `--` until a previous target exists.
+
+## Focus Summary
+
+The **Summary** page reviews one monitoring session at a time. Choose a session from the list in the top-right corner; the newest of the last 7 days' sessions is shown first, and the session in progress includes its latest data.
+
+The verdict is based on the session's foreground rate:
+
+| Verdict | Foreground rate |
+| --- | --- |
+| `LOCKED IN` | 85% or more |
+| `IN THE ZONE` | 65% to 85% |
+| `HALF HERE` | 40% to 65% |
+| `ESCAPE ARTIST` | Below 40% |
+| `WARMING UP` | Sessions shorter than one minute, which are too short to rate |
+
+Each verdict comes with a light-hearted comment and a tip based on the session's data, such as the application that pulled you away most often or an unusually long average detour.
+
+The page also shows:
+
+- **FOCUS TIME** — time the target was in the foreground, out of the monitored time.
+- **SWITCHES** — number of switches and switches per hour.
+- **AVG DETOUR** — average and longest time away from the target per switch.
+- **TOP DISTRACTION** — the application you switched to most often, with its visit count and time.
+- **WHERE YOUR FOCUS WENT** — the top three applications visited while away, with each one's share of the time away.
+- **TODAY SO FAR** — totals for all sessions that started today: a verdict and comment for the whole day, the number of sessions, focus time, the overall foreground rate, switches, and the day's top distraction. A session that runs past midnight counts toward the day it started.
+
+## Focus session history
+
+Every monitoring session is saved to a local SQLite database at `%LOCALAPPDATA%\MyClock\focus.db`. A session starts when monitoring begins for a target and ends when you select another target, use **Reset**, or close MyClock. Each session records:
+
+| Column | Meaning |
+| --- | --- |
+| `window_title` | Title of the target window when the session started. |
+| `process_name` | Executable name of the target, such as `devenv`; empty if it could not be read. |
+| `started_at`, `ended_at` | Session start and end as UTC timestamps. `ended_at` is empty if MyClock did not exit normally. |
+| `monitored_ms` | Time spent monitoring, including time other windows were in the foreground. |
+| `foreground_ms` | Time the target was in the foreground. `foreground_ms / monitored_ms` is the foreground rate. |
+| `switch_count` | Number of switches away from the target, as shown in **Switches**. |
+
+Each switch is also saved in detail, so later summaries can show where time away from the target went:
+
+- `focus_switches` — one row per switch, linked to its session: `left_at` (when focus reached another application), `returned_at` (when it came back to the target; empty if the session ended first), and `away_ms` (monitored time away, excluding time while paused).
+- `focus_switch_visits` — one row per window visited during a switch, in order: `window_title`, `process_name`, `started_at`, and `duration_ms`. Time spent in MyClock itself or with no foreground window counts toward `away_ms` but not toward any visit.
+
+Window titles of visited windows are stored only in this local file. Sessions recorded before switch details were added keep their `switch_count` but have no `focus_switches` rows.
+
+Progress is saved every 30 seconds while a session is open. **Reset** clears the values on screen but keeps the saved history.
+
+MyClock keeps the last 7 days of history: today and the six days before it. Older sessions, with their switches and visits, are deleted when MyClock starts and again each time a new day begins.
 
 ## Clock and Settings
 

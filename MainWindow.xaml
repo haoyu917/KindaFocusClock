@@ -16,6 +16,9 @@
         <DataTemplate DataType="{x:Type vm:StopwatchViewModel}">
             <views:StopwatchView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SummaryViewModel}">
+            <views:SummaryView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
             <views:SettingsView />
         </DataTemplate>
@@ -40,6 +43,7 @@
                 <StackPanel DockPanel.Dock="Top">
                     <Button Command="{Binding ShowClockCommand}" Content="Clock" Style="{StaticResource NavigationButtonStyle}" />
                     <Button Command="{Binding ShowStopwatchCommand}" Content="Window Monitor" Style="{StaticResource NavigationButtonStyle}" />
+                    <Button Command="{Binding ShowSummaryCommand}" Content="Summary" Style="{StaticResource NavigationButtonStyle}" />
                     <Button Command="{Binding ShowSettingsCommand}" Content="Settings" Style="{StaticResource NavigationButtonStyle}" />
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Bottom"

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Threading;
@@ -32,6 +34,43 @@ public sealed class WindowTrackingService : IWindowTrackingService
     public bool IsForeground(nint windowHandle) =>
         windowHandle != nint.Zero && windowHandle == _foregroundWindowHandle;
 
+    public bool IsCurrentProcessWindow(nint windowHandle) =>
+        windowHandle != nint.Zero &&
+        GetWindowThreadProcessId(windowHandle, out var processId) != 0 &&
+        processId == Environment.ProcessId;
+
+    public string? GetWindowTitle(nint windowHandle)
+    {
+        var titleLength = windowHandle == nint.Zero ? 0 : GetWindowTextLength(windowHandle);
+        if (titleLength == 0)
+        {
+            return null;
+        }
+
+        var title = new StringBuilder(titleLength + 1);
+        GetWindowText(windowHandle, title, title.Capacity);
+        return title.Length > 0 ? title.ToString() : null;
+    }
+
+    public string? GetProcessName(nint windowHandle)
+    {
+        if (windowHandle == nint.Zero || GetWindowThreadProcessId(windowHandle, out var processId) == 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var process = Process.GetProcessById((int)processId);
+            return process.ProcessName;
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or Win32Exception)
+        {
+            // The process exited or cannot be inspected (for example an elevated process).
+            return null;
+        }
+    }
+
     private void OnTimerTick(object? sender, EventArgs e)
     {
         RefreshWindowState();
@@ -56,7 +95,7 @@ public sealed class WindowTrackingService : IWindowTrackingService
         }
     }
 
-    private static IReadOnlyList<OpenWindowInfo> EnumerateOpenWindows()
+    private IReadOnlyList<OpenWindowInfo> EnumerateOpenWindows()
     {
         var windows = new List<OpenWindowInfo>();
         var currentProcessId = Environment.ProcessId;
@@ -68,17 +107,10 @@ public sealed class WindowTrackingService : IWindowTrackingService
                 return true;
             }
 
-            var titleLength = GetWindowTextLength(windowHandle);
-            if (titleLength == 0)
+            var title = GetWindowTitle(windowHandle);
+            if (title is not null)
             {
-                return true;
-            }
-
-            var title = new StringBuilder(titleLength + 1);
-            GetWindowText(windowHandle, title, title.Capacity);
-            if (title.Length > 0)
-            {
-                windows.Add(new OpenWindowInfo(windowHandle, title.ToString()));
+                windows.Add(new OpenWindowInfo(windowHandle, title));
             }
 
             return true;

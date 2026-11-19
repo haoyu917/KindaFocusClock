@@ -68,6 +68,93 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    <!-- Focus summary verdict colors: locked in = green, in the zone = teal,
+         half here = amber, escape artist = red, warming up = gray. -->
+    <Style x:Key="VerdictBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="#26303C" />
+        <Setter Property="BorderBrush" Value="#3A4655" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource SecondaryTextBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.LockedIn}">
+                <Setter Property="Background" Value="#18352D" />
+                <Setter Property="BorderBrush" Value="#286A53" />
+                <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.InTheZone}">
+                <Setter Property="Background" Value="#163536" />
+                <Setter Property="BorderBrush" Value="#2A6B66" />
+                <Setter Property="TextElement.Foreground" Value="{StaticResource AccentBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.HalfHere}">
+                <Setter Property="Background" Value="#3B3020" />
+                <Setter Property="BorderBrush" Value="#80602B" />
+                <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.EscapeArtist}">
+                <Setter Property="Background" Value="#3D252A" />
+                <Setter Property="BorderBrush" Value="#7E3D48" />
+                <Setter Property="TextElement.Foreground" Value="{StaticResource ErrorBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="VerdictDotStyle" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{StaticResource DisabledBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.LockedIn}">
+                <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.InTheZone}">
+                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.HalfHere}">
+                <Setter Property="Fill" Value="{StaticResource WarningBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.EscapeArtist}">
+                <Setter Property="Fill" Value="{StaticResource ErrorBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="VerdictValueTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.LockedIn}">
+                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.InTheZone}">
+                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.HalfHere}">
+                <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Verdict}" Value="{x:Static models:FocusVerdict.EscapeArtist}">
+                <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <!-- Thin share bar; Value is a fraction from 0 to 1. -->
+    <Style x:Key="ShareBarStyle" TargetType="ProgressBar">
+        <Setter Property="Height" Value="4" />
+        <Setter Property="Minimum" Value="0" />
+        <Setter Property="Maximum" Value="1" />
+        <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border x:Name="PART_Track" Background="#26303C" CornerRadius="2" />
+                        <Border x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="2" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="MissionComboBoxStyle" TargetType="ComboBox">
         <Setter Property="Background" Value="#F4F7FA" />
         <Setter Property="Foreground" Value="#11151B" />
