@@ -39,6 +39,19 @@ public sealed class WindowTrackingService : IWindowTrackingService
         GetWindowThreadProcessId(windowHandle, out var processId) != 0 &&
         processId == Environment.ProcessId;
 
+    public string? GetWindowTitle(nint windowHandle)
+    {
+        var titleLength = windowHandle == nint.Zero ? 0 : GetWindowTextLength(windowHandle);
+        if (titleLength == 0)
+        {
+            return null;
+        }
+
+        var title = new StringBuilder(titleLength + 1);
+        GetWindowText(windowHandle, title, title.Capacity);
+        return title.Length > 0 ? title.ToString() : null;
+    }
+
     public string? GetProcessName(nint windowHandle)
     {
         if (windowHandle == nint.Zero || GetWindowThreadProcessId(windowHandle, out var processId) == 0)
@@ -82,7 +95,7 @@ public sealed class WindowTrackingService : IWindowTrackingService
         }
     }
 
-    private static IReadOnlyList<OpenWindowInfo> EnumerateOpenWindows()
+    private IReadOnlyList<OpenWindowInfo> EnumerateOpenWindows()
     {
         var windows = new List<OpenWindowInfo>();
         var currentProcessId = Environment.ProcessId;
@@ -94,17 +107,10 @@ public sealed class WindowTrackingService : IWindowTrackingService
                 return true;
             }
 
-            var titleLength = GetWindowTextLength(windowHandle);
-            if (titleLength == 0)
+            var title = GetWindowTitle(windowHandle);
+            if (title is not null)
             {
-                return true;
-            }
-
-            var title = new StringBuilder(titleLength + 1);
-            GetWindowText(windowHandle, title, title.Capacity);
-            if (title.Length > 0)
-            {
-                windows.Add(new OpenWindowInfo(windowHandle, title.ToString()));
+                windows.Add(new OpenWindowInfo(windowHandle, title));
             }
 
             return true;

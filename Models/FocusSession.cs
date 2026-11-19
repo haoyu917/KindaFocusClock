@@ -25,7 +25,11 @@ public sealed class FocusSession
     public TimeSpan ForegroundDuration { get; set; }
 
     // Number of times focus left the target for another application window.
+    // Sessions saved before switch details were recorded have a count but no Switches.
     public int SwitchCount { get; set; }
+
+    // Details of each switch, in order.
+    public List<FocusSwitch> Switches { get; } = [];
 
     // Share of the monitored time the target was in the foreground, from 0 to 1.
     public double ForegroundRate => MonitoredDuration > TimeSpan.Zero

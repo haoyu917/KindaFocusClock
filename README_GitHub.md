@@ -111,6 +111,13 @@ Every monitoring session is saved to a local SQLite database at `%LOCALAPPDATA%\
 | `foreground_ms` | Time the target was in the foreground. `foreground_ms / monitored_ms` is the foreground rate. |
 | `switch_count` | Number of switches away from the target, as shown in **Switches**. |
 
+Each switch is also saved in detail, so later summaries can show where time away from the target went:
+
+- `focus_switches` — one row per switch, linked to its session: `left_at` (when focus reached another application), `returned_at` (when it came back to the target; empty if the session ended first), and `away_ms` (monitored time away, excluding time while paused).
+- `focus_switch_visits` — one row per window visited during a switch, in order: `window_title`, `process_name`, `started_at`, and `duration_ms`. Time spent in MyClock itself or with no foreground window counts toward `away_ms` but not toward any visit.
+
+Window titles of visited windows are stored only in this local file. Sessions recorded before switch details were added keep their `switch_count` but have no `focus_switches` rows.
+
 Progress is saved every 30 seconds while a session is open. **Reset** clears the values on screen but keeps the saved history.
 
 ## Clock and Settings
