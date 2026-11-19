@@ -65,7 +65,17 @@ public sealed class StopwatchViewModel : ViewModelBase, IDisposable
     }
 
     
-    public string ElapsedTime => _stopwatchService.Elapsed.ToString(@"mm\:ss\.f");
+    public string ElapsedTime
+    {
+        get
+        {
+            // Show hours once the session reaches one hour; "mm" alone wraps at 60 minutes.
+            var elapsed = _stopwatchService.Elapsed;
+            return elapsed.TotalHours >= 1
+                ? $"{(int)elapsed.TotalHours}:{elapsed.Minutes:00}:{elapsed.Seconds:00}.{elapsed.Milliseconds / 100}"
+                : elapsed.ToString(@"mm\:ss\.f");
+        }
+    }
 
     
     public bool IsRunning => _stopwatchService.IsRunning;
